@@ -1,0 +1,77 @@
+from tqdm import tqdm
+from module1 import Knn
+
+
+import gzip
+import os
+import shutil
+from urllib.request import urlretrieve
+
+def f(a, b):
+    c = a - np.array([[b]])
+    d = np.floor(c / np.array([[256]]))
+    e = d + np.array([[1]], dtype=np.int16)
+    f = e.astype('uint8')
+    g = f * np.array([[255]], dtype=np.uint8)
+    return g
+
+# 下载并导入MNIST
+def load(root='./mnist'):
+    if not os.path.exists(root + "\\t10k-labels-idx1-ubyte"):
+        if os.path.exists(root):
+            shutil.rmtree(root)
+        os.mkdir(root)
+        if not os.path.exists("download\\t10k-labels-idx1-ubyte.gz"):
+            if os.path.exists("download"):
+                shutil.rmtree("download")
+            os.mkdir("download")
+            urlretrieve("http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",
+                        "download\\train-images-idx3-ubyte.gz")
+            urlretrieve("http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",
+                        "download\\train-labels-idx1-ubyte.gz")
+            urlretrieve("http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz",
+                        "download\\t10k-images-idx3-ubyte.gz")
+            urlretrieve("http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz",
+                        "download\\t10k-labels-idx1-ubyte.gz")
+        open(root + "\\train-images-idx3-ubyte", "wb+").write(
+            gzip.GzipFile("download\\train-images-idx3-ubyte.gz").read())
+        open(root + "\\train-labels-idx1-ubyte", "wb+").write(
+            gzip.GzipFile("download\\train-labels-idx1-ubyte.gz").read())
+        open(root + "\\t10k-images-idx3-ubyte", "wb+").write(
+            gzip.GzipFile("download\\t10k-images-idx3-ubyte.gz").read())
+        open(root + "\\t10k-labels-idx1-ubyte", "wb+").write(
+            gzip.GzipFile("download\\t10k-labels-idx1-ubyte.gz").read())
+        shutil.rmtree("download")
+    y_train = np.fromfile(root + "\\train-labels-idx1-ubyte", dtype=np.uint8, offset=8)
+    train_len = len(y_train)
+    x_train = f(np.fromfile(root + "\\train-images-idx3-ubyte", dtype=np.uint8, offset=16) \
+                   .reshape(train_len, 784), 100)
+    y_test = np.fromfile(root + "\\t10k-labels-idx1-ubyte", dtype=np.uint8, offset=8)
+    test_len = len(y_test)
+    x_test = f(np.fromfile(root + "\\t10k-images-idx3-ubyte", dtype=np.uint8, offset=16) \
+                  .reshape(test_len, 784), 100)
+    return x_train, y_train, x_test, y_test
+
+def main():
+    # 调入MNIST
+    x_train, y_train, x_test, y_test = load()
+    # 预测
+    knn = Knn()
+    knn.fit(x_train, y_train)
+    # 统计准确率、进度
+    total = 0
+    correct = 0
+    for i in range(0, len(y_test)):
+        predicted = knn.predict(x_test[i])
+        expected = y_test[i]
+        total += 1
+        if predicted == expected:
+            correct += 1
+        if total % 100 == 0:
+            print('进度：',total / len(y_test))
+            print("当前准确率", correct / total)
+    # 最终结果
+    print("最终准确率", correct / total)
+
+if __name__ == '__main__':
+    main()
