@@ -1,0 +1,32 @@
+from numpy import tile
+import operator
+
+class Knn(object):
+
+    # 最近邻数
+    def __init__(self, k=3):
+        self.k = k
+
+    def fit(self, X, y):
+        self.X = X
+        self.y = y
+
+    # 预测
+    def predict(self, X):
+
+        a = len(self.y)
+        b = tile(X, (a, 1))
+        # 计算距离
+        c = b - self.X
+        d = c ** 2
+        e = d.sum(axis=1)
+        f = e ** 0.5
+        # 从小到大排序
+        g = f.argsort()
+        # 找最近的K个
+        h = {}
+        for i in range(self.k):
+            label = self.y[g[i]]
+            h[label] = h.get(label, 0) + 1
+        class_count_list = sorted(h.items(), key=operator.itemgetter(1), reverse=True)
+        return class_count_list[0][0]
