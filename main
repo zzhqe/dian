@@ -1,3 +1,5 @@
+import numpy as np
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 from module1 import Knn
 
@@ -52,6 +54,12 @@ def load(root='./mnist'):
                   .reshape(test_len, 784), 100)
     return x_train, y_train, x_test, y_test
 
+def display_image(image, title):
+    image = image.reshape(28, 28, 1).squeeze()
+    plt.figure()
+    plt.title(title)
+    plt.imshow(image, cmap=plt.cm.gray_r)
+
 def main():
     # 调入MNIST
     x_train, y_train, x_test, y_test = load()
@@ -72,6 +80,17 @@ def main():
             print("当前准确率", correct / total)
     # 最终结果
     print("最终准确率", correct / total)
+    fig, ax = plt.subplots(nrows=4, ncols=5, sharex='all', sharey='all')
+    fig.suptitle('Plot predicted samples')
+    ax = ax.flatten()
+    for i in range(20):
+        img = x_test[i]
+        ax[i].set_title(knn.predict(x_test[i]))
+        ax[i].imshow(img, cmap='Greys', interpolation='nearest')
+    ax[0].set_xticks([])
+    ax[0].set_yticks([])
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == '__main__':
     main()
